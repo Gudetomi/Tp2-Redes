@@ -83,7 +83,7 @@ char* Make_HTTP_Response(int value, int lenght, char *type, char *buffer, char *
     }else{ // Se o servidor não especificar, padrão = CLOSED
         strcat(response, "Connection: Closed\r\n");
     }
-    
+
     strcat(response, "\r\n");
     if(buffer != NULL){ // Se houver conteúdo para ser mostrado para o usuário
         strcat(response, buffer);
