@@ -34,7 +34,6 @@ void* producer(void *args){
         error("ERROR opening socket");
     bzero((char *) &serv_addr, sizeof(serv_addr));
     portno = atoi((char*)args);
-//    printf("%d\n", portno);
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port = htons(portno);
@@ -50,7 +49,6 @@ void* producer(void *args){
 
     while(1){
         n = read(newsockfd, &request[count], 1);
-//        printf("aqui\n");
         fim ++;
         if(request[count-1] == '\r' && request[count] == '\n') { // Se encontrar um terminador
             if (fim == 2){ // Se encontrar um terminador de request HTTP
@@ -77,7 +75,6 @@ void* producer(void *args){
         }
         count++;
         if (n < 0) error("ERROR reading from socket");
-//        printf("%d %d\n", in, out);
     }
     close(sockfd);
 }
@@ -86,16 +83,22 @@ void* producer(void *args){
 void* consumer(void *args){
     Infos_Threads request;
     char *response;
+    char *request_info;
     int validate = 0;
 
     while (1) {
-//        printf("%d %d\n", in, out);
         sem_wait(&full);
         pthread_mutex_lock(&mutex);
 
         if (buffer[out].used) {
             request = buffer[out];
             buffer[out].used = 0;
+
+            request_info = (char*)calloc(strlen(buffer[out].request_info), sizeof(char));
+            strcpy(request_info, buffer[out].request_info);
+            free(buffer[out].request_info);
+            request.request_info = request_info;
+
             out = (out + 1) % BufferSize;
             validate = 1;
         }
@@ -106,7 +109,7 @@ void* consumer(void *args){
             response = Make_Response(request.request_info, ROOT);
             write(request.newsockfd, response, strlen(response));
             close(request.newsockfd);
-//            free(request.request_info);
+            free(request.request_info);
             free(response);
         }
         validate = 0;
@@ -123,7 +126,7 @@ int main(int argc, char *argv[]){
     }
 
 //    system("clear");
-    int n_threads = 8;
+    int n_threads = 10;
 
     pthread_t pro, con[n_threads];
     pthread_mutex_init(&mutex, NULL);
