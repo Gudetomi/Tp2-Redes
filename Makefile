@@ -24,7 +24,6 @@ run_server_tcp_thread: build_thread
 run_server_tcp_mt: build_mt
 	./bin/server_tcp_mt $(PORT)
 
-
 build_mt: multi_thread.o
 	gcc -o bin/server_tcp_mt bin/multi_thread.o bin/fila.o bin/file.o bin/http.o bin/requests.o
 
