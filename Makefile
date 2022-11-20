@@ -1,6 +1,6 @@
 PORT=4000
 
-default: server_m
+default: help
 
 help:
 	@echo "Server"
