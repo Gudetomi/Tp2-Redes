@@ -40,8 +40,8 @@ tcp_thread.o: src/server_tcp_thread.c http.o
 tcp.o: src/server_tcp.c http.o
 	gcc -o bin/tcp.o src/server_tcp.c -c -Wall
 
-multi_thread.o: src/multi_thread.c fila.o http.o
-	gcc -o bin/multi_thread.o src/multi_thread.c -c -Wall
+multi_thread.o: src/server_multi_thread.c fila.o http.o
+	gcc -o bin/multi_thread.o src/server_multi_thread.c -c -Wall
 
 fila.o: src/fila.c src/fila.h
 	gcc -o bin/fila.o src/fila.c -c -Wall
