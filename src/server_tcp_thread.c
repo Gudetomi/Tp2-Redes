@@ -5,6 +5,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <time.h>
+#include <sys/stat.h>
 
 
 #include <pthread.h>
@@ -13,10 +15,7 @@
 #define ROOT "./Arquivos"
 #define BUFFER_TAM 60000
 
-/* ________________________________________________________________ PRINCIPAL ________________________________________________________________*/
-
-
-void *Thread_Server(void *arg){
+void* Thread_Server(void *arg){
     Infos_Threads *request = (Infos_Threads*)(arg);
     char *response = Make_Response(request->request_info, ROOT);
     write(request->newsockfd, response, strlen(response));
@@ -30,8 +29,7 @@ int main(int argc, char *argv[]){
 
     pthread_t T1;
 
-    Descritor *descritor = NULL;
-    Fila *elemento;
+    Infos_Threads thread;
 
     char *request = (char*)calloc(BUFFER_TAM, sizeof(char));
     int sockfd, newsockfd, portno;
@@ -65,17 +63,13 @@ int main(int argc, char *argv[]){
         fim ++;
         if(request[count-1] == '\r' && request[count] == '\n') { // Se encontrar um terminador
             if (fim == 2){ // Se encontrar um terminador de request HTTP
-                /* TODO: Verificar se tem thread para atender Multithread */
-                descritor = push(descritor, newsockfd, request); // Descritor para atender a FILA
 
-                // if (Tem_Thread_Para_Atender){
-                (void) pthread_create(&T1, NULL, Thread_Server, (void*)(&descritor->cabeca->info_thread)); // Single thread
-                (void) pthread_join(T1,NULL); // Single Thread
+                thread.newsockfd = newsockfd;
+                thread.request_info = (char*)calloc(strlen(request), sizeof(char));
+                strcpy(thread.request_info, request);
+                (void) pthread_create(&T1, NULL, Thread_Server, (void*)(&thread));
 
-                elemento = pop(descritor);
-                // }
-
-                /* FIM TODO....*/
+                (void) pthread_join(T1,NULL);
 
                 newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
                 if (newsockfd < 0) error("ERROR on accept");

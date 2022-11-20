@@ -6,14 +6,39 @@ help:
 	@echo "Server"
 	@echo
 	@echo "Target rules:"
-	@echo "    build      - Compiles and generates binary file"
-	@echo "    run_server    - Starts a server"
-	@echo "    run_client 	- Runs a client"
+	@echo "    run_server_tcp      - Compiles and run tcp server"
+	@echo "    run_server_tcp_thread      - Compiles and run tcp server with thread"
+	@echo "    run_server_tcp_mt      - Compiles and run tcp server with multiple threads"
+	@echo "    buid_tcp      - Compiles tcp server"
+	@echo "    build_thread      - Compiles tcp server with thread"
+	@echo "    build_mt      - Compiles tcp server with multiple threads"
 	@echo "    clean    - Clean the project by removing binaries"
 	@echo "    help     - Prints a help message with target rules"
 
-build: multi_thread.o
-	gcc -o bin/server_m bin/multi_thread.o bin/fila.o bin/file.o bin/http.o bin/requests.o
+run_server_tcp: build_tcp
+	./bin/server_tcp $(PORT)
+
+run_server_tcp_thread: build_thread
+	./bin/server_tcp_thread $(PORT)
+
+run_server_tcp_mt: build_mt
+	./bin/server_tcp_mt $(PORT)
+
+
+build_mt: multi_thread.o
+	gcc -o bin/server_tcp_mt bin/multi_thread.o bin/fila.o bin/file.o bin/http.o bin/requests.o
+
+build_tcp: tcp.o
+	gcc -o bin/server_tcp bin/tcp.o bin/file.o bin/http.o bin/requests.o
+
+build_thread: tcp_thread.o
+	gcc -o bin/server_tcp_thread bin/tcp_thread.o bin/file.o bin/http.o bin/requests.o
+
+tcp_thread.o: src/server_tcp_thread.c http.o
+	gcc -o bin/tcp_thread.o src/server_tcp_thread.c -c -Wall
+
+tcp.o: src/server_tcp.c http.o
+	gcc -o bin/tcp.o src/server_tcp.c -c -Wall
 
 multi_thread.o: src/multi_thread.c fila.o http.o
 	gcc -o bin/multi_thread.o src/multi_thread.c -c -Wall
@@ -29,12 +54,6 @@ file.o: src/file.c src/file.h
 
 requests.o: src/requests.c src/requests.h
 	gcc -o bin/requests.o src/requests.c -c -Wall
-
-run_server:
-	./bin/server 5004
-
-run_cliente:
-	./bin/cliente localhost 5004
 
 clean:
 	@rm ./bin/*

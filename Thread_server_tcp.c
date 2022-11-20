@@ -338,9 +338,6 @@ void* Thread_Server(void *arg){
     free(response);
 }
 
-
-
-
 int main(int argc, char *argv[]){
     system("clear");
 

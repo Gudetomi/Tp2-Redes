@@ -2,38 +2,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-
-
-#include <pthread.h>
 #include "http.h"
 #include "fila.h"
 #define ROOT "./Arquivos"
 #define BUFFER_TAM 60000
 
-/* ________________________________________________________________ PRINCIPAL ________________________________________________________________*/
-
-
-void *Thread_Server(void *arg){
-    Infos_Threads *request = (Infos_Threads*)(arg);
-    char *response = Make_Response(request->request_info, ROOT);
-    write(request->newsockfd, response, strlen(response));
-    close(request->newsockfd);
-    free(request->request_info);
-    free(response);
-}
-
 int main(int argc, char *argv[]){
     system("clear");
-
-    pthread_t T1;
-
-    Descritor *descritor = NULL;
-    Fila *elemento;
-
     char *request = (char*)calloc(BUFFER_TAM, sizeof(char));
+    char *response;
     int sockfd, newsockfd, portno;
     socklen_t clilen;
     struct sockaddr_in serv_addr, cli_addr;
@@ -65,21 +44,16 @@ int main(int argc, char *argv[]){
         fim ++;
         if(request[count-1] == '\r' && request[count] == '\n') { // Se encontrar um terminador
             if (fim == 2){ // Se encontrar um terminador de request HTTP
-                /* TODO: Verificar se tem thread para atender Multithread */
-                descritor = push(descritor, newsockfd, request); // Descritor para atender a FILA
-
-                // if (Tem_Thread_Para_Atender){
-                (void) pthread_create(&T1, NULL, Thread_Server, (void*)(&descritor->cabeca->info_thread)); // Single thread
-                (void) pthread_join(T1,NULL); // Single Thread
-
-                elemento = pop(descritor);
-                // }
-
-                /* FIM TODO....*/
-
+                count++;
+                request[count] = '\0';
+                // printf("REQUEST = \n\n%s\n\n", request);
+                response = Make_Response(request, ROOT);
+                write(newsockfd, response, strlen(response));
+                free(response);
+                close(newsockfd);
+                // printf("\n\n_______________________________________________________________________________________________________________________\n\n");
                 newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
                 if (newsockfd < 0) error("ERROR on accept");
-
                 free(request);
                 request = (char*)calloc(BUFFER_TAM, sizeof(char));
                 count = 0;
