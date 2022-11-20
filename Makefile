@@ -6,14 +6,14 @@ help:
 	@echo "Server"
 	@echo
 	@echo "Target rules:"
-	@echo "    run_server_tcp      - Compiles and run tcp server"
-	@echo "    run_server_tcp_thread      - Compiles and run tcp server with thread"
-	@echo "    run_server_tcp_mt      - Compiles and run tcp server with multiple threads"
-	@echo "    buid_tcp      - Compiles tcp server"
-	@echo "    build_thread      - Compiles tcp server with thread"
-	@echo "    build_mt      - Compiles tcp server with multiple threads"
-	@echo "    clean    - Clean the project by removing binaries"
-	@echo "    help     - Prints a help message with target rules"
+	@echo "    run_server_tcp      	- Compiles and run tcp server"
+	@echo "    run_server_tcp_thread       - Compiles and run tcp server with thread"
+	@echo "    run_server_tcp_mt      	- Compiles and run tcp server with multiple threads"
+	@echo "    buid_tcp     		- Compiles tcp server"
+	@echo "    build_thread      		- Compiles tcp server with thread"
+	@echo "    build_mt      		- Compiles tcp server with multiple threads"
+	@echo "    clean    			- Clean the project by removing binaries"
+	@echo "    help     			- Prints a help message with target rules"
 
 run_server_tcp: build_tcp
 	./bin/server_tcp $(PORT)
