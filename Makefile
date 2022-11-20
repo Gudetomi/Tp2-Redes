@@ -1,4 +1,4 @@
-PORT=4000
+PORT=4007
 
 default: help
 
@@ -25,13 +25,13 @@ run_server_tcp_mt: build_mt
 	./bin/server_tcp_mt $(PORT)
 
 build_mt: multi_thread.o
-	gcc -o bin/server_tcp_mt bin/multi_thread.o bin/fila.o bin/file.o bin/http.o bin/requests.o
+	gcc -o bin/server_tcp_mt bin/multi_thread.o bin/fila.o bin/file.o bin/http.o bin/requests.o -lpthread
 
 build_tcp: tcp.o
 	gcc -o bin/server_tcp bin/tcp.o bin/file.o bin/http.o bin/requests.o
 
 build_thread: tcp_thread.o
-	gcc -o bin/server_tcp_thread bin/tcp_thread.o bin/file.o bin/http.o bin/requests.o
+	gcc -o bin/server_tcp_thread bin/tcp_thread.o bin/file.o bin/http.o bin/requests.o -lpthread
 
 tcp_thread.o: src/server_tcp_thread.c http.o
 	gcc -o bin/tcp_thread.o src/server_tcp_thread.c -c -Wall

@@ -1,6 +1,8 @@
 typedef struct Infos_Threads{
     char *request_info;
     int newsockfd;
+    int used;
+
 }Infos_Threads;
 
 typedef struct Fila{

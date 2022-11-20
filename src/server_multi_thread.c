@@ -12,41 +12,29 @@
 #include "fila.h"
 #define ROOT "./Arquivos"
 #define BUFFER_TAM 60000
+#define BufferSize 10000
+#include <pthread.h>
+#include <semaphore.h>
 
-/* ________________________________________________________________ PRINCIPAL ________________________________________________________________*/
+sem_t empty;
+sem_t full;
+int in = 0;
+int out = 0;
+Infos_Threads buffer[BufferSize];
+pthread_mutex_t mutex;
 
-
-void *Thread_Server(void *arg){
-    Infos_Threads *request = (Infos_Threads*)(arg);
-    char *response = Make_Response(request->request_info, ROOT);
-    write(request->newsockfd, response, strlen(response));
-    close(request->newsockfd);
-    free(request->request_info);
-    free(response);
-}
-
-int main(int argc, char *argv[]){
-    system("clear");
-
-    pthread_t T1;
-
-    Descritor *descritor = NULL;
-    Fila *elemento;
-
+void* producer(void *args){
     char *request = (char*)calloc(BUFFER_TAM, sizeof(char));
     int sockfd, newsockfd, portno;
     socklen_t clilen;
     struct sockaddr_in serv_addr, cli_addr;
     int n;
-    if (argc < 2) {
-        fprintf(stderr,"ERROR, no port provided\n");
-        exit(1);
-    }
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0)
         error("ERROR opening socket");
     bzero((char *) &serv_addr, sizeof(serv_addr));
-    portno = atoi(argv[1]);
+    portno = atoi((char*)args);
+//    printf("%d\n", portno);
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port = htons(portno);
@@ -62,34 +50,97 @@ int main(int argc, char *argv[]){
 
     while(1){
         n = read(newsockfd, &request[count], 1);
+//        printf("aqui\n");
         fim ++;
         if(request[count-1] == '\r' && request[count] == '\n') { // Se encontrar um terminador
             if (fim == 2){ // Se encontrar um terminador de request HTTP
-                /* TODO: Verificar se tem thread para atender Multithread */
-                descritor = push(descritor, newsockfd, request); // Descritor para atender a FILA
+                sem_wait(&empty);
+                pthread_mutex_lock(&mutex);
 
-                // if (Tem_Thread_Para_Atender){
-                (void) pthread_create(&T1, NULL, Thread_Server, (void*)(&descritor->cabeca->info_thread)); // Single thread
-                (void) pthread_join(T1,NULL); // Single Thread
+                buffer[in].newsockfd = newsockfd;
+                buffer[in].request_info = (char*)calloc(strlen(request), sizeof(char));
+                strcpy(buffer[in].request_info, request);
+                buffer[in].used = 1;
 
-                elemento = pop(descritor);
-                // }
-
-                /* FIM TODO....*/
-
-                newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
-                if (newsockfd < 0) error("ERROR on accept");
+                in = (in+1)%BufferSize;
+                pthread_mutex_unlock(&mutex);
+                sem_post(&full);
 
                 free(request);
                 request = (char*)calloc(BUFFER_TAM, sizeof(char));
                 count = 0;
+                newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
+                if (newsockfd < 0) error("ERROR on accept");
                 continue;
             }
             fim = 0;
         }
         count++;
         if (n < 0) error("ERROR reading from socket");
+//        printf("%d %d\n", in, out);
     }
     close(sockfd);
+}
+
+
+void* consumer(void *args){
+    Infos_Threads request;
+    char *response;
+    int validate = 0;
+
+    while (1) {
+//        printf("%d %d\n", in, out);
+        sem_wait(&full);
+        pthread_mutex_lock(&mutex);
+
+        if (buffer[out].used) {
+            request = buffer[out];
+            buffer[out].used = 0;
+            out = (out + 1) % BufferSize;
+            validate = 1;
+        }
+        pthread_mutex_unlock(&mutex);
+        sem_post(&empty);
+
+        if (validate){
+            response = Make_Response(request.request_info, ROOT);
+            write(request.newsockfd, response, strlen(response));
+            close(request.newsockfd);
+//            free(request.request_info);
+            free(response);
+        }
+        validate = 0;
+    }
+    return NULL;
+}
+
+
+int main(int argc, char *argv[]){
+
+    if (argc < 2) {
+        fprintf(stderr,"ERROR, no port provided\n");
+        exit(1);
+    }
+
+//    system("clear");
+    int n_threads = 8;
+
+    pthread_t pro, con[n_threads];
+    pthread_mutex_init(&mutex, NULL);
+    sem_init(&empty,0,BufferSize);
+    sem_init(&full,0,0);
+
+    pthread_create(&pro, NULL, (void *)producer, argv[1]);
+
+    for(int i = 0; i < n_threads; i++) {
+        pthread_create(&con[i], NULL, (void *)consumer, (void *)NULL);
+    }
+    for(int i = 0; i < n_threads; i++) {
+        pthread_join(con[i], NULL);
+    }
+    pthread_join(pro, NULL);
+    pthread_mutex_destroy(&mutex);
+    sem_destroy(&empty);
+    sem_destroy(&full);
     return 0;
 }

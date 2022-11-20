@@ -23,6 +23,7 @@ void* Thread_Server(void *arg){
     free(request->request_info);
     free(response);
 }
+
 int main(int argc, char *argv[]){
     system("clear");
 
