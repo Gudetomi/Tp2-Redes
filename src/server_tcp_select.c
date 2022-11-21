@@ -96,8 +96,6 @@ int main(int argc, char *argv[]) {
                                     // printf("REQUEST = \n\n%s\n\n", request);
                                     response = Make_Response(concat_request, ROOT);
                                     write(newsockfd, response, strlen(response));
-                                    free(response);
-                                    free(request);
                                     request = (char*)calloc(BUFFER_TAM, sizeof(char));
                                     count = 0;
                                     continue;
