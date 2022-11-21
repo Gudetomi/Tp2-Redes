@@ -52,7 +52,6 @@ int main(int argc, char *argv[]) {
             perror("Server-select() error lol!");
             exit(1);
         }
-        printf("Server-select() is OK - sockfd %d ...\n", sockfd);
 
         for (i = 0; i <= fdmax; i++) {
             if (FD_ISSET(i, &read_fds)) {
@@ -61,8 +60,6 @@ int main(int argc, char *argv[]) {
                     if ((newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen)) == -1) {
                         perror("Server-accept() error lol!");
                     } else {
-                        printf("Server-accept() is OK...\n");
-
                         FD_SET(newsockfd, &master);
                         if (newsockfd > fdmax) {
                             fdmax = newsockfd;
