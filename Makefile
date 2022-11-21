@@ -1,4 +1,4 @@
-PORT=4003
+	PORT=4004
 
 default: help
 
@@ -24,6 +24,9 @@ run_server_tcp_thread: build_thread
 run_server_tcp_mt: build_mt
 	./bin/server_tcp_mt $(PORT)
 
+run_server_select: build_select
+	./bin/server_tcp_select $(PORT)
+
 build_mt: multi_thread.o
 	gcc -o bin/server_tcp_mt bin/multi_thread.o bin/fila.o bin/file.o bin/http.o bin/requests.o -lpthread
 
@@ -33,6 +36,10 @@ build_tcp: tcp.o
 build_thread: tcp_thread.o
 	gcc -o bin/server_tcp_thread bin/tcp_thread.o bin/file.o bin/http.o bin/requests.o -lpthread
 
+build_select: tcp_select.o
+	gcc -o bin/server_tcp_select bin/tcp_select.o bin/file.o bin/http.o bin/requests.o -lpthread
+
+
 tcp_thread.o: src/server_tcp_thread.c http.o
 	gcc -o bin/tcp_thread.o src/server_tcp_thread.c -c -Wall
 
@@ -41,6 +48,9 @@ tcp.o: src/server_tcp.c http.o
 
 multi_thread.o: src/server_multi_thread.c fila.o http.o
 	gcc -o bin/multi_thread.o src/server_multi_thread.c -c -Wall
+
+tcp_select.o: src/server_tcp_select.c http.o
+	gcc -o bin/tcp_select.o src/server_tcp_select.c -c -Wall
 
 fila.o: src/fila.c src/fila.h
 	gcc -o bin/fila.o src/fila.c -c -Wall
